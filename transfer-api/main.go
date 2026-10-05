@@ -70,7 +70,7 @@ func BuildConfig(l *zap.SugaredLogger) config {
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("%w: unable to initialize logger", err)
+		log.Fatalf("%s: unable to initialize logger", err.Error())
 	}
 
 	l := logger.Sugar()
