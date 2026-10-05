@@ -10,8 +10,9 @@ import (
 func TestHealthEndpoint(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	w := httptest.NewRecorder()
+	r := routes()
 
-	HealthHandler(w, req)
+	r.ServeHTTP(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -30,5 +31,32 @@ func TestHealthEndpoint(t *testing.T) {
 
 	if data.Status != "Ok" {
 		t.Errorf("want %s, have %s", "Ok", data.Status)
+	}
+}
+
+func TestReadinessEndpoint(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
+	w := httptest.NewRecorder()
+
+	r := routes()
+	r.ServeHTTP(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("want %d, have %d", http.StatusOK, res.StatusCode)
+	}
+
+	data := struct {
+		Status string
+	}{}
+
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+		t.Errorf("%s: error expected to be nil", err.Error())
+	}
+
+	if data.Status != "Ready" {
+		t.Errorf("want %s, have %s", "Ready", data.Status)
 	}
 }

@@ -67,6 +67,14 @@ func BuildConfig(l *zap.SugaredLogger) config {
 	return defaultConfig
 }
 
+func routes() *mux.Router {
+	r := mux.NewRouter()
+	r.HandleFunc("/health", HealthHandler).Methods("GET")
+	r.HandleFunc("/ready", ReadinessHandler).Methods("GET")
+
+	return r
+}
+
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -76,9 +84,7 @@ func main() {
 	l := logger.Sugar()
 	config := BuildConfig(l)
 
-	r := mux.NewRouter()
-	r.HandleFunc("/health", HealthHandler).Methods("GET")
-	r.HandleFunc("/ready", ReadinessHandler).Methods("GET")
+	r := routes()
 
 	l.Infof("Starting service %s at %d", config.serviceName, config.serverPort)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.serverPort), r); err != nil {
