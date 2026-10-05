@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -75,6 +80,35 @@ func routes() *mux.Router {
 	return r
 }
 
+func startServer(l *zap.SugaredLogger, config config, r *mux.Router) {
+	l.Infof("Starting service %s at %d", config.serviceName, config.serverPort)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", config.serverPort),
+		Handler: r,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			l.Fatalf(fmt.Errorf("unable to start service:%w", err).Error())
+		}
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownRelease()
+
+	l.Info("Shuting down the server")
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		l.Fatalf(fmt.Errorf("unable to shutdown server: %w", err).Error())
+	}
+
+	l.Info("Server shutdown")
+}
+
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -85,11 +119,5 @@ func main() {
 	config := BuildConfig(l)
 
 	r := routes()
-
-	l.Infof("Starting service %s at %d", config.serviceName, config.serverPort)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.serverPort), r); err != nil {
-		l.Fatalf("%w: unable to start service", err)
-	}
-
-	l.Infof("Shuting down service %s", config.serviceName)
+	startServer(l, config, r)
 }
