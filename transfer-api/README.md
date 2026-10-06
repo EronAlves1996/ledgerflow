@@ -123,3 +123,21 @@ The goal is not to build a production-ready banking platform, but to create a re
                          | Elastic      |
                          +-------------+
 ```
+
+## Starting the service
+
+```sh
+go run .
+```
+
+You can pass another port or another service name via env vars.
+
+```sh
+PORT=4545 SERVICE_NAME=other_service go run .
+```
+
+## Running tests
+
+```sh
+go test .
+```
