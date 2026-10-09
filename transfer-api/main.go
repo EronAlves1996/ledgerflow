@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/EronAlves1996/ledgerflow/transfer-api/middleware/audit"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -72,10 +73,10 @@ func BuildConfig(l *zap.SugaredLogger) config {
 	return defaultConfig
 }
 
-func routes() *mux.Router {
+func routes(l *zap.SugaredLogger) *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/health", HealthHandler).Methods("GET")
-	r.HandleFunc("/ready", ReadinessHandler).Methods("GET")
+	r.HandleFunc("/health", audit.WithAudit(l, HealthHandler)).Methods("GET")
+	r.HandleFunc("/ready", audit.WithAudit(l, ReadinessHandler)).Methods("GET")
 
 	return r
 }
@@ -118,6 +119,6 @@ func main() {
 	l := logger.Sugar()
 	config := BuildConfig(l)
 
-	r := routes()
+	r := routes(l)
 	startServer(l, config, r)
 }

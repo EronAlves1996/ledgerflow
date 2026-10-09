@@ -69,6 +69,7 @@ The goal is not to build a production-ready banking platform, but to create a re
 - [ ] Export traces to Grafana, Dynatrace, and Elastic.
 - [ ] Dashboards for key fintech flows.
 - [ ] Alerts for failed transfers and DLQ growth.
+- [x] Basic request-level audit logging for `transfer-api` `/health` and `/ready`.
 
 ### Security
 
@@ -130,102 +131,6 @@ The goal is not to build a production-ready banking platform, but to create a re
 
 Each service has its own README with build, test, and run instructions.
 
----
+## Exercises
 
-## 2. Study Recommendations
-
-To avoid repeating the flaws found in the review, focus on these topics:
-
-### Conway’s Law & Team Topologies
-
-- **Book:** _Team Topologies_ by Matthew Skelton & Manuel Pais – explains Conway’s Law and the inverse Conway maneuver.
-- **Article:** Martin Fowler’s “Conway’s Law” – concise explanation with examples.
-- **Video:** “Inverse Conway Maneuver” talks on YouTube (e.g., from DevOps conferences).
-
-### Go Modules & Dependency Management
-
-- **Official Go Blog:** “Using Go Modules” – covers `go mod tidy`, direct vs indirect dependencies.
-- **Documentation:** `go help mod tidy` and `go help modules`.
-
-### Testing in Go
-
-- **Package `net/http/httptest`** – for handler tests and integration tests with `httptest.NewServer`.
-- **Article:** “Testing HTTP handlers in Go” by various authors – shows table-driven tests and integration patterns.
-- **Book:** _The Go Programming Language_ (Donovan & Kernighan) – chapter on testing.
-
-### Configuration & Error Handling
-
-- **Article:** “Configuration in Go” – prefer returning errors from config builders instead of calling `log.Fatal` inside libraries.
-- **Pattern:** Use `func BuildConfig() (config, error)` and handle the error in `main`.
-
-### Structured Logging
-
-- **Zap documentation:** “Getting Started” and “Logger” – learn about `zap.SugaredLogger` vs `zap.Logger`, and field‑based logging (`Infow`, `Errorw`).
-- **Best practices:** Always log with key‑value pairs, not formatted strings.
-
-### Graceful Shutdown
-
-- **Go Blog:** “Graceful Shutdown in Go” – using `context.WithTimeout` and `server.Shutdown`.
-
-### Event-Driven Microservices
-
-- **Book:** _Building Event-Driven Microservices_ by Adam Bellemare – covers events, idempotency, outbox pattern, DLQ.
-- **Book:** _Microservices Patterns_ by Chris Richardson – chapters on event‑driven architecture, sagas, and idempotent consumers.
-
-### Domain-Driven Design
-
-- **Book:** _Domain-Driven Design_ by Eric Evans – bounded contexts, ubiquitous language.
-- **Book:** _Implementing Domain-Driven Design_ by Vaughn Vernon – practical DDD with events.
-
-### Fintech & Accounting
-
-- **Article:** “Double-Entry Accounting for Developers” – explains debits, credits, and immutable ledgers.
-- **Pattern:** Idempotency keys and exactly‑once processing in payment systems.
-
----
-
-## 3. Exercise Revisions
-
-Based on the review, these sections need revision:
-
-### Exercise 1 – Event-Driven vs. Request-Response
-
-- **Correction:** The payload does **not** need to be idempotent; the **consumer’s handling logic** must be idempotent. Events are immutable facts.
-- **Add:** Mention that idempotency is achieved by deduplication keys or state checks on the consumer side.
-
-### Exercise 2 – Identify Bounded Contexts and Domain Events
-
-- **Improvement:** Use past‑tense event names consistently:
-  - `BookAdded`, `BookRemoved`, `BookPriceChanged`
-  - `CartItemAdded`, `CartItemRemoved`, `CartItemQuantityChanged`
-  - `PaymentAccepted`, `CreditCardAdded`, `DebitCardAdded`
-
-### Exercise 4 – Apply Conway’s Law
-
-- **Rewrite completely.** You stated you didn’t remember Conway’s Law.
-- **Required content:**
-  - Define Conway’s Law: “Organizations design systems that mirror their own communication structure.”
-  - Predict boundaries: mobile team → mobile/BFF layer; backend team → backend services/APIs; data team → analytics pipelines; operations team → infrastructure tooling.
-  - Explain how Conway’s Law shapes these boundaries (teams build what they can communicate about).
-  - Describe an inverse Conway maneuver: reorganize into stream‑aligned teams around business domains (e.g., payments, accounts, notifications) plus a platform team for shared infrastructure, so the architecture follows the desired service boundaries.
-
-### Exercise 5 – Make a New Service or Add to Existing Service
-
-- **Add:** Discuss fail‑open vs. fail‑closed behavior.
-  - If fraud scoring fails, should payment fail (fail‑closed) or proceed with risk (fail‑open)?
-- **Add:** Circuit breakers, timeouts, and latency budgets for the fraud service call.
-- **Add:** Explicit mention of data coupling (PII vs. payment data) and regulatory boundaries.
-
-### Exercise 6 – Design an Event-Driven Data Flow
-
-- **Improvement:** Use consistent past‑tense event names:
-  - `OrderShipped`, `ClientNotified`, `MerchantNotified`, `StockDecremented`, `DeliveryCompleted`.
-- **Add:** DLQ and retry handling for failed consumers.
-- **Add:** Outbox pattern for reliable event publishing from the producer side.
-- **Clarify:** Eventual consistency is inherent; ensure idempotent consumers and replay capability.
-
-After revising these points, your answers will be complete and aligned with the expected solutions.
-
-```
-
-```
+- [`exercises/lgwt-1.md`](./exercises/lgwt-1.md) – Learning Go with Tests track: toolchain, Hello World, integers, documentation, and coverage.

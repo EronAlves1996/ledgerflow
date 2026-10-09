@@ -5,12 +5,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestHealthEndpoint(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	w := httptest.NewRecorder()
-	r := routes()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		t.Fatal("failure initializing the logger")
+	}
+
+	r := routes(logger.Sugar())
 
 	r.ServeHTTP(w, req)
 
@@ -37,8 +44,12 @@ func TestHealthEndpoint(t *testing.T) {
 func TestReadinessEndpoint(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	w := httptest.NewRecorder()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		t.Fatal("failure initializing the logger")
+	}
 
-	r := routes()
+	r := routes(logger.Sugar())
 	r.ServeHTTP(w, req)
 
 	res := w.Result()

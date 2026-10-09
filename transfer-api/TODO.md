@@ -35,6 +35,10 @@ user-facing documentation.
       JSON encoding fails.
 - [ ] Defer `logger.Sync()` in `main` and ignore its error explicitly
       (common practice when syncing on exit).
+- [ ] Replace `zap.NewProduction()` in `main_test.go` with `zap.NewNop()` or a `zaptest` logger to avoid noisy tests.
+- [ ] [ ] Add an integration test in `main_test.go` that hits `/health` and `/ready` through `routes(l)` with a `zaptest/observer` logger attached, asserting both the response (status + body) and the `request completed` log fields (`method`, `path`, `statusCode`, `duration`). This closes AC4 for the audit feature.
+- [ ] Change audit duration calculation from `time.Now().UnixMilli() - start.UnixMilli()` to `time.Since(start)` and log as `duration_ms` or `zap.Duration`.
+- [ ] Consider wrapping the router globally instead of wrapping `/health` and `/ready` individually, so future routes are audited automatically.
 
 ### Code quality
 
@@ -44,6 +48,8 @@ user-facing documentation.
 - [ ] Improve error propagation in `startServer`.
   - The goroutine currently calls `logger.Fatalf`, which exits the process.
   - Consider sending the error on a channel and handling it in `main`.
+- [ ] Ensure `inspectingWriter` supports optional `http.Flusher`/`http.Hijacker` if the audit middleware is used on streaming endpoints.
+- [ ] Default or fallback the audit status code to `http.StatusOK` when a handler does not call `WriteHeader`.
 
 ### Testing
 
@@ -56,6 +62,7 @@ user-facing documentation.
   - valid `PORT` override
   - invalid `PORT` value
   - out-of-range `PORT` value
+- [ ] Add an audit middleware test that verifies log output, not only response behavior.
 
 ### Documentation
 
@@ -64,6 +71,16 @@ user-facing documentation.
 - [ ] If the root README is added, link to it from `transfer-api/README.md`.
 - [ ] Add a short "Known gaps" or "Future work" note only if it affects
       how someone runs or evaluates the service.
+- [ ] Keep `transfer-api/README.md` aligned with the audit log fields and per-route wrapping behavior.
+
+## exercises
+
+- [ ] Remove accidental `exercises/ledgerflow-tdd/integers/diff`; it appears to be a committed diff artifact.
+- [ ] Fix Go doc typo in `integers.Add`: `it's sum` → `its sum`.
+- [ ] Clean up `exercises/lgwt-1.md` code fences and duplicated diff blocks.
+- [ ] Align exercise 3's test data with the actual `integers_test.go` cases, or vice versa. The spec in `lgwt-1.md` says `2+2=4`, `-1+1=0`, `0+0=0`, `-3+-2=-5`; the code tests `2+2=4`, `3+(-4)=-1`, `5+(-5)=0`, `0+0=0`. Same categories, different numbers — pick one source of truth.
+- [ ] Note the closure capture pattern in `greeting_test.go`. `for _, v := range table { t.Run(..., func(t *testing.T){ ... v ... }) }` is safe on Go 1.22+, but if the exercise is meant to teach closures, call this out explicitly (or use `v := v`).
+- [ ] Decide where the feature suggestion belongs. It is currently duplicated inside `exercises/lgwt-1.md`; that file should be the exercise log only.
 
 ---
 
